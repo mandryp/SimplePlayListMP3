@@ -1,6 +1,7 @@
 package testfileandarrays;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,6 +16,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -45,6 +47,7 @@ public class SimplePlayListMP3 extends JFrame {
 //      Создаем панели
         JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
         btnPanel = new JPanel(new GridLayout(4, 1));
+        btnPanel.setPreferredSize(new Dimension(50, 100));
         myListModel = new DefaultListModel();
 
         JList myTrackList = new JList(myListModel);
@@ -53,20 +56,27 @@ public class SimplePlayListMP3 extends JFrame {
 
 //      Создаем кнопки
         ButtonListener bl = new ButtonListener();
-        addButton("Open list...", "open", bl);
-        addButton("Save list...", "save", bl);
-        addButton("Add track...", "add", bl);
-        addButton("Remove track...", "remove", bl);
+        ImageIcon iconOpen = new javax.swing.ImageIcon(getClass().getResource("/icons/open.png"));
+        ImageIcon iconSave = new javax.swing.ImageIcon(getClass().getResource("/icons/save.png"));
+        ImageIcon iconAdd = new javax.swing.ImageIcon(getClass().getResource("/icons/add.png"));
+        ImageIcon iconDel = new javax.swing.ImageIcon(getClass().getResource("/icons/del.png"));
+        
+        addButton("Open list...", "open", bl, iconOpen);
+        addButton("Save list...", "save", bl, iconSave);
+        addButton("Add track...", "add", bl, iconAdd);
+        addButton("Remove track...", "remove", bl, iconDel);
 
         mainPanel.add(scrlPanel, BorderLayout.CENTER);
         mainPanel.add(btnPanel, BorderLayout.EAST);
         getContentPane().add(mainPanel);
     }
 
-    private void addButton(String name, String nameAction, ButtonListener bl) {
+    private void addButton(String name, String nameAction, ButtonListener bl, ImageIcon icon) {
 
-        JButton btn = new JButton(name);
+        JButton btn = new JButton();
         btn.setActionCommand(nameAction);
+        btn.setToolTipText(name);
+        btn.setIcon(icon);
         btn.addActionListener(bl);
         btnPanel.add(btn);
 
@@ -123,7 +133,6 @@ public class SimplePlayListMP3 extends JFrame {
                     int showOpenDialog = fileChooser.showOpenDialog(null);
                     if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
                         File[] files = fileChooser.getSelectedFiles();
-                        System.out.println(String.valueOf(files.length));
                         for (int i = 0; i < files.length; i++) {
                             file = files[i];
                             if (file.isDirectory()) {
@@ -140,6 +149,9 @@ public class SimplePlayListMP3 extends JFrame {
                     }
                     break;
                 }
+                case "remove": {
+                    break;
+                }
 
             }
 
@@ -147,47 +159,46 @@ public class SimplePlayListMP3 extends JFrame {
 
     }
 
-}
+    private class MyMouseListener extends MouseAdapter {
 
-class MyMouseListener extends MouseAdapter {
+        private File file;
+        private MyPlayer player;
+        private String prevName;
+        private BufferedInputStream bis;
 
-    private File file;
-    private MyPlayer player;
-    private String prevName;
-    private BufferedInputStream bis;
-
-    @Override
-    public void mouseClicked(MouseEvent e) {
+        @Override
+        public void mouseClicked(MouseEvent e) {
 
 //          запуск по двойному клику
-        JList list = (JList) e.getSource();
-        if (e.getClickCount() == 2) {
-            if (player != null) {
-                player.close();
-                player = null;
-            }
-            int i = list.locationToIndex(e.getPoint());
-
-            if (i >= 0) {
-                String name = (String) list.getModel().getElementAt(i);
-                if (name.equals(prevName)) {
-                    prevName = "";
-                    return;
+            JList list = (JList) e.getSource();
+            if (e.getClickCount() == 2) {
+                if (player != null) {
+                    player.close();
+                    player = null;
                 }
-                file = new File(name);
+                int i = list.locationToIndex(e.getPoint());
 
-                try {
-                    FileInputStream fis = new FileInputStream(file);
-                    bis = new BufferedInputStream(fis);
-                    player = new MyPlayer(bis);
-                    player.play();
-                    prevName = name;
+                if (i >= 0) {
+                    String name = (String) list.getModel().getElementAt(i);
+                    if (name.equals(prevName)) {
+                        prevName = "";
+                        return;
+                    }
+                    file = new File(name);
 
-                } catch (FileNotFoundException | JavaLayerException ex) {
-                    Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
+                    try {
+                        FileInputStream fis = new FileInputStream(file);
+                        bis = new BufferedInputStream(fis);
+                        player = new MyPlayer(bis);
+                        player.play();
+                        prevName = name;
+
+                    } catch (FileNotFoundException | JavaLayerException ex) {
+                        Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 }
             }
+
         }
-
     }
 }
