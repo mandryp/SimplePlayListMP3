@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -23,6 +24,8 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javazoom.jl.decoder.JavaLayerException;
 
@@ -30,6 +33,7 @@ public class SimplePlayListMP3 extends JFrame {
 
     private final JPanel btnPanel;
     private final DefaultListModel myListModel;
+    private final JList myTrackList;
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
@@ -50,7 +54,8 @@ public class SimplePlayListMP3 extends JFrame {
         btnPanel.setPreferredSize(new Dimension(50, 100));
         myListModel = new DefaultListModel();
 
-        JList myTrackList = new JList(myListModel);
+        myTrackList = new JList(myListModel);
+        myTrackList.setToolTipText("Double click for play/stop");
         myTrackList.addMouseListener(new MyMouseListener());
         JScrollPane scrlPanel = new JScrollPane(myTrackList);
 
@@ -150,6 +155,11 @@ public class SimplePlayListMP3 extends JFrame {
                     break;
                 }
                 case "remove": {
+                    int [] selInds = myTrackList.getSelectedIndices();
+                    for (int i = 0; i < selInds.length; i++) {
+                        int selInd = selInds[i];
+                        myListModel.remove(selInd-i);
+                    }
                     break;
                 }
 
