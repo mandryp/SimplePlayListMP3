@@ -7,19 +7,21 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import javax.swing.DefaultListModel;
 
-public class FileOperations {
+public class FileOperations{
 
     public static void writeListToFile(File file, DefaultListModel lm) throws FileNotFoundException {
-        
+
         try (PrintWriter pw = new PrintWriter(file)) {
-            for (int i = 0; i < lm.size(); i++) pw.println(lm.get(i));
+            for (int i = 0; i < lm.size(); i++) {
+                pw.println(lm.get(i));
+            }
             pw.close();
         }
-        
+
     }
-    
-    public static ArrayList<String> getListFromFile(File file) throws FileNotFoundException{
-        
+
+    public static ArrayList<String> getListFromFile(File file) throws FileNotFoundException {
+
         ArrayList<String> list = new ArrayList<>();
         Scanner s = new Scanner(file);
         int i = 0;
@@ -30,5 +32,11 @@ public class FileOperations {
         return list;
     }
 
-    
+    public static void addFileToList(File file, DefaultListModel dlm) {
+
+        if (file.isFile() && file.getName().endsWith(".mp3") && !dlm.contains(file.getPath())) {
+            dlm.addElement(file.getPath());
+        }
+
+    }
 }

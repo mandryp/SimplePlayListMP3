@@ -24,22 +24,22 @@ import javax.swing.JScrollPane;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javazoom.jl.decoder.JavaLayerException;
 
-public class TestFileAndArrays extends JFrame {
+public class SimplePlayListMP3 extends JFrame {
 
     private final JPanel btnPanel;
     private final DefaultListModel myListModel;
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
-        TestFileAndArrays myPlayList = new TestFileAndArrays("Playlist");
+        SimplePlayListMP3 myPlayList = new SimplePlayListMP3("Playlist");
         myPlayList.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        myPlayList.setSize(600, 400);
+        myPlayList.setSize(600, 300);
         myPlayList.setVisible(true);
 
     }
 
-    public TestFileAndArrays(String title) {
-//        создаем фрейм
+    public SimplePlayListMP3(String title) {
+//      Создаем фрейм
         super(title);
 
 //      Создаем панели
@@ -97,7 +97,7 @@ public class TestFileAndArrays extends JFrame {
                             myListModel.addElement(list1);
                         }
                     } catch (FileNotFoundException ex) {
-                        Logger.getLogger(TestFileAndArrays.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     break;
                 }
@@ -109,66 +109,85 @@ public class TestFileAndArrays extends JFrame {
                         try {
                             FileOperations.writeListToFile(file, myListModel);
                         } catch (FileNotFoundException ex) {
-                            Logger.getLogger(TestFileAndArrays.class.getName()).log(Level.SEVERE, null, ex);
+                            Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
                         }
                     }
                     break;
                 }
                 case "add": {
-                    fileChooser.setFileFilter(new FileNameExtensionFilter("Tracks mp3", "mp3"));
+                    FileNameExtensionFilter filter = new FileNameExtensionFilter("Tracks mp3", "mp3");
+
+                    fileChooser.setFileFilter(filter);
+                    fileChooser.setMultiSelectionEnabled(true);
+                    fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
                     int showOpenDialog = fileChooser.showOpenDialog(null);
                     if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
-                        file = fileChooser.getSelectedFile();
+                        File[] files = fileChooser.getSelectedFiles();
+                        System.out.println(String.valueOf(files.length));
+                        for (int i = 0; i < files.length; i++) {
+                            file = files[i];
+                            if (file.isDirectory()) {
+                                File[] folderFiles = file.listFiles();
+                                for (int j = 0; j < folderFiles.length; j++) {
+                                    File folderFile = folderFiles[j];
+                                    FileOperations.addFileToList(folderFile, myListModel);
+                                }
+
+                            }
+                        }
+                    } else {
+                        FileOperations.addFileToList(file, myListModel);
                     }
-                    myListModel.addElement(file.getPath());
                     break;
                 }
 
             }
 
         }
+
     }
 
-    private class MyMouseListener extends MouseAdapter {
+}
 
-        private File file;
-        private MyPlayer player;
-        private String prevName;
-        private BufferedInputStream bis;
+class MyMouseListener extends MouseAdapter {
 
-        @Override
-        public void mouseClicked(MouseEvent e) {
+    private File file;
+    private MyPlayer player;
+    private String prevName;
+    private BufferedInputStream bis;
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
 
 //          запуск по двойному клику
-            JList list = (JList) e.getSource();
-            if (e.getClickCount() == 2) {
-                if (player != null) {
-                    player.close();
-                    player = null;
+        JList list = (JList) e.getSource();
+        if (e.getClickCount() == 2) {
+            if (player != null) {
+                player.close();
+                player = null;
+            }
+            int i = list.locationToIndex(e.getPoint());
+
+            if (i >= 0) {
+                String name = (String) list.getModel().getElementAt(i);
+                if (name.equals(prevName)) {
+                    prevName = "";
+                    return;
                 }
-                int i = list.locationToIndex(e.getPoint());
+                file = new File(name);
 
-                if (i >= 0) {
-                    String name = (String) list.getModel().getElementAt(i);
-                    if (name.equals(prevName)) {
-                        prevName = "";
-                        return;
-                    }
-                    file = new File(name);
+                try {
+                    FileInputStream fis = new FileInputStream(file);
+                    bis = new BufferedInputStream(fis);
+                    player = new MyPlayer(bis);
+                    player.play();
+                    prevName = name;
 
-                    try {
-                        FileInputStream fis = new FileInputStream(file);
-                        bis = new BufferedInputStream(fis);
-                        player = new MyPlayer(bis);
-                        player.play();
-                        prevName = name;
-
-                    } catch (FileNotFoundException | JavaLayerException ex) {
-                        Logger.getLogger(TestFileAndArrays.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                } catch (FileNotFoundException | JavaLayerException ex) {
+                    Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-
         }
+
     }
 }
