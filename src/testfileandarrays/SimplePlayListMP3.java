@@ -9,23 +9,21 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
-import javax.swing.DefaultListSelectionModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JList;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javazoom.jl.decoder.JavaLayerException;
 
@@ -34,6 +32,8 @@ public class SimplePlayListMP3 extends JFrame {
     private final JPanel btnPanel;
     private final DefaultListModel myListModel;
     private final JList myTrackList;
+    private File file;
+    private MyPlayer player;
 
     public static void main(String[] args) throws FileNotFoundException, UnsupportedEncodingException {
 
@@ -48,6 +48,42 @@ public class SimplePlayListMP3 extends JFrame {
 //      Создаем фрейм
         super(title);
 
+//      Создаем контекстное меню
+        JPopupMenu popupMenu = new JPopupMenu();
+        JMenuItem play = new JMenuItem("play");
+        JMenuItem stop = new JMenuItem("stop");
+        play.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (player != null) {
+                    player.stop();
+                    player = null;
+                }
+                try {
+                    player = new MyPlayer(file);
+                    player.playTrack();
+                } catch (FileNotFoundException | JavaLayerException ex) {
+                    Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            }
+        });
+        
+        stop.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (player != null) {
+                    player.stop();
+                    player = null;
+                }
+            }
+        });
+        
+        popupMenu.add(play);
+        popupMenu.add(stop);
+
 //      Создаем панели
         JPanel mainPanel = new JPanel(new BorderLayout(5, 5));
         btnPanel = new JPanel(new GridLayout(4, 1));
@@ -55,6 +91,7 @@ public class SimplePlayListMP3 extends JFrame {
         myListModel = new DefaultListModel();
 
         myTrackList = new JList(myListModel);
+        myTrackList.setComponentPopupMenu(popupMenu);
         myTrackList.setToolTipText("Double click for play/stop");
         myTrackList.addMouseListener(new MyMouseListener());
         JScrollPane scrlPanel = new JScrollPane(myTrackList);
@@ -65,7 +102,7 @@ public class SimplePlayListMP3 extends JFrame {
         ImageIcon iconSave = new javax.swing.ImageIcon(getClass().getResource("/icons/save.png"));
         ImageIcon iconAdd = new javax.swing.ImageIcon(getClass().getResource("/icons/add.png"));
         ImageIcon iconDel = new javax.swing.ImageIcon(getClass().getResource("/icons/del.png"));
-        
+
         addButton("Open list...", "open", bl, iconOpen);
         addButton("Save list...", "save", bl, iconSave);
         addButton("Add track...", "add", bl, iconAdd);
@@ -89,13 +126,12 @@ public class SimplePlayListMP3 extends JFrame {
 
     private class ButtonListener implements ActionListener {
 
-        private File file;
         private ArrayList<String> list;
 
         @Override
         public void actionPerformed(ActionEvent e) {
             if (!((Object) e.getSource() instanceof JButton)) {
-                System.out.println("Команда не найдена");
+                System.out.println(e.getSource().toString());
             }
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setAcceptAllFileFilterUsed(false);
@@ -155,10 +191,10 @@ public class SimplePlayListMP3 extends JFrame {
                     break;
                 }
                 case "remove": {
-                    int [] selInds = myTrackList.getSelectedIndices();
+                    int[] selInds = myTrackList.getSelectedIndices();
                     for (int i = 0; i < selInds.length; i++) {
                         int selInd = selInds[i];
-                        myListModel.remove(selInd-i);
+                        myListModel.remove(selInd - i);
                     }
                     break;
                 }
@@ -171,38 +207,51 @@ public class SimplePlayListMP3 extends JFrame {
 
     private class MyMouseListener extends MouseAdapter {
 
-        private File file;
-        private MyPlayer player;
         private String prevName;
         private BufferedInputStream bis;
+
+        @Override
+        public void mouseReleased(MouseEvent e) {
+            getFileFromList(e);
+        }
+
+        @Override
+        public void mousePressed(MouseEvent e) {
+            getFileFromList(e);
+        }
+
+        public void getFileFromList(MouseEvent e) {
+
+            int i = myTrackList.locationToIndex(e.getPoint());
+            myTrackList.setSelectedIndex(i);
+            if (i >= 0) {
+                String name = (String) myTrackList.getModel().getElementAt(i);
+                file = new File(name);
+            }
+
+        }
 
         @Override
         public void mouseClicked(MouseEvent e) {
 
 //          запуск по двойному клику
-            JList list = (JList) e.getSource();
             if (e.getClickCount() == 2) {
                 if (player != null) {
-                    player.close();
+                    player.stop();
                     player = null;
                 }
-                int i = list.locationToIndex(e.getPoint());
+                int i = myTrackList.locationToIndex(e.getPoint());
 
                 if (i >= 0) {
-                    String name = (String) list.getModel().getElementAt(i);
+                    String name = (String) myTrackList.getModel().getElementAt(i);
                     if (name.equals(prevName)) {
                         prevName = "";
                         return;
                     }
                     file = new File(name);
-
                     try {
-                        FileInputStream fis = new FileInputStream(file);
-                        bis = new BufferedInputStream(fis);
-                        player = new MyPlayer(bis);
-                        player.play();
-                        prevName = name;
-
+                        player = new MyPlayer(file);
+                        player.playTrack();
                     } catch (FileNotFoundException | JavaLayerException ex) {
                         Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
                     }
