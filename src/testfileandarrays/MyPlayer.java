@@ -13,7 +13,7 @@ public class MyPlayer {
 
     private Player player;
 
-    public MyPlayer(File file) throws FileNotFoundException {
+    public MyPlayer(File file) {
 
         try {
             FileInputStream fis = new FileInputStream(file);
@@ -24,7 +24,7 @@ public class MyPlayer {
         }
     }
 
-    public void playTrack() throws JavaLayerException {
+    public void playTrack() {
 
         new Thread() {
 

@@ -60,16 +60,11 @@ public class SimplePlayListMP3 extends JFrame {
                     player.stop();
                     player = null;
                 }
-                try {
-                    player = new MyPlayer(file);
-                    player.playTrack();
-                } catch (FileNotFoundException | JavaLayerException ex) {
-                    Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
-                }
-
+                player = new MyPlayer(file);
+                player.playTrack();
             }
         });
-        
+
         stop.addActionListener(new ActionListener() {
 
             @Override
@@ -80,7 +75,7 @@ public class SimplePlayListMP3 extends JFrame {
                 }
             }
         });
-        
+
         popupMenu.add(play);
         popupMenu.add(stop);
 
@@ -130,9 +125,6 @@ public class SimplePlayListMP3 extends JFrame {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (!((Object) e.getSource() instanceof JButton)) {
-                System.out.println(e.getSource().toString());
-            }
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setAcceptAllFileFilterUsed(false);
             switch (e.getActionCommand()) {
@@ -141,14 +133,10 @@ public class SimplePlayListMP3 extends JFrame {
                     int showOpenDialog = fileChooser.showOpenDialog(null);
                     if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
                         file = fileChooser.getSelectedFile();
-                    }
-                    try {
                         list = FileOperations.getListFromFile(file);
                         for (String list1 : list) {
                             myListModel.addElement(list1);
                         }
-                    } catch (FileNotFoundException ex) {
-                        Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
                     }
                     break;
                 }
@@ -157,11 +145,7 @@ public class SimplePlayListMP3 extends JFrame {
                     int showSaveDialog = fileChooser.showSaveDialog(null);
                     if (showSaveDialog == JFileChooser.APPROVE_OPTION) {
                         file = fileChooser.getSelectedFile();
-                        try {
-                            FileOperations.writeListToFile(file, myListModel);
-                        } catch (FileNotFoundException ex) {
-                            Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
-                        }
+                        FileOperations.writeListToFile(file, myListModel);
                     }
                     break;
                 }
@@ -174,19 +158,10 @@ public class SimplePlayListMP3 extends JFrame {
                     int showOpenDialog = fileChooser.showOpenDialog(null);
                     if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
                         File[] files = fileChooser.getSelectedFiles();
-                        for (int i = 0; i < files.length; i++) {
-                            file = files[i];
-                            if (file.isDirectory()) {
-                                File[] folderFiles = file.listFiles();
-                                for (int j = 0; j < folderFiles.length; j++) {
-                                    File folderFile = folderFiles[j];
-                                    FileOperations.addFileToList(folderFile, myListModel);
-                                }
-
-                            }
+                        for (File file1 : files) {
+                            File file = file1;
+                            FileOperations.addFileToList(file, myListModel);
                         }
-                    } else {
-                        FileOperations.addFileToList(file, myListModel);
                     }
                     break;
                 }
@@ -249,12 +224,8 @@ public class SimplePlayListMP3 extends JFrame {
                         return;
                     }
                     file = new File(name);
-                    try {
-                        player = new MyPlayer(file);
-                        player.playTrack();
-                    } catch (FileNotFoundException | JavaLayerException ex) {
-                        Logger.getLogger(SimplePlayListMP3.class.getName()).log(Level.SEVERE, null, ex);
-                    }
+                    player = new MyPlayer(file);
+                    player.playTrack();
                 }
             }
 
