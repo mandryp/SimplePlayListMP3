@@ -129,22 +129,22 @@ public class SimplePlayListMP3 extends JFrame {
             fileChooser.setAcceptAllFileFilterUsed(false);
             switch (e.getActionCommand()) {
                 case "open": {
-                    fileChooser.setFileFilter(new FileNameExtensionFilter("List m3u", "m3u"));
+                    fileChooser.setFileFilter(new FileNameExtensionFilter("Список треков, *.pls", "pls"));
                     int showOpenDialog = fileChooser.showOpenDialog(null);
                     if (showOpenDialog == JFileChooser.APPROVE_OPTION) {
                         file = fileChooser.getSelectedFile();
-                        list = FileOperations.getListFromFile(file);
-                        for (String list1 : list) {
-                            myListModel.addElement(list1);
-                        }
+                        FileOperations.readListFromFile(file, myListModel);
                     }
                     break;
                 }
                 case "save": {
-                    fileChooser.setFileFilter(new FileNameExtensionFilter("List m3u", "m3u"));
+                    fileChooser.setFileFilter(new FileNameExtensionFilter("Список треков, *.pls", "pls"));
                     int showSaveDialog = fileChooser.showSaveDialog(null);
                     if (showSaveDialog == JFileChooser.APPROVE_OPTION) {
                         file = fileChooser.getSelectedFile();
+                        if (!file.getPath().endsWith(".pls")) {
+                            file = new File(file.getPath()+".pls");
+                        }
                         FileOperations.writeListToFile(file, myListModel);
                     }
                     break;
